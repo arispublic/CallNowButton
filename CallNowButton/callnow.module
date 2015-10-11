@@ -1,0 +1,165 @@
+<?php
+
+/**
+* Created by Aris Priyantoro
+* URL: http://aris.pituruh.com
+*/
+
+
+/**
+ * Implements hook_permission().
+ */
+function callnow_permission() {
+  return array(
+    'administer callnow' => array(
+      'title' => t('Administer Call Now Button'),
+    )
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+ function callnow_menu() {
+	$items['admin/config/user-interface/callnow']  = array(
+	    'title' => 'CallNow Button settings',
+	    'description' => 'Configure default behavior of Call Now Button.',
+	    'page callback' => 'drupal_get_form',
+	    'page arguments' => array('callnow_settings'),
+	    'access arguments' => array('administer callnow'),
+	);
+	
+	return $items;
+}
+
+/**
+* Configuration page
+*/
+function callnow_settings() {
+	$form = array();
+	
+	$form['callnow_show'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Enable button'),
+		'#default_value' => variable_get('callnow_show', 0)
+	);
+	
+	$form['callnow_bgcolor'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Button Color'),
+		'#default_value' => variable_get('callnow_bgcolor', '#81c28b'),
+	);
+	
+	$form['callnow_phone'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Phone Number'),
+		'#default_value' => variable_get('callnow_phone', '+65 66942348'),
+	);
+
+	$form['callnow_position'] = array(
+		'#type' => 'radios',
+		'#title' => t('Button Position'),
+		'#options' => array(0 => t('Bottom Left'), 1 => t('Bottom Right'), 2 => t('Full Bottom')),
+		'#default_value' => variable_get('callnow_position', 1),
+	);
+	
+	return system_settings_form($form);
+}
+
+
+/**
+ * Implements hook_page_menu().
+ */
+function callnow_page_build(&$page) {
+	if (variable_get('callnow_show', 0) && (!path_is_admin(current_path()))) {
+		$page['page_bottom']['callnow_link'] = array(
+			'#markup' => t('<a id="callnowbuttonseven" href="tel:@number">&nbsp;</a>', array('@number' => variable_get('callnow_phone', '+65 66942348')))
+		);
+		_generateCss();
+	}
+}
+
+//generate CSS to be added in header.
+function _generateCss() {
+	$position = variable_get('callnow_position', 1);
+	$default_css = '#callnowbuttonseven {display:none;} 
+	@media screen and (max-width:650px){
+		#callnowbuttonseven {
+		display:block; 
+		!button_appearance 
+		height:65px; 
+		position:fixed; 
+		border-top:2px solid !change_color; 
+		background:url(data:image/svg+xml;base64, !svg_image) center 2px no-repeat !default_color; 
+		text-decoration:none; 
+		box-shadow:0 0 5px #888; 
+		z-index:9999;
+		background-size:58px 58px;
+		!button_appearance_end 
+		}
+		!button_extra}
+	';
+	
+	switch ($position) {
+		case 0:
+			$ButtonAppearance = "width:100px;left:0;border-bottom-right-radius:40px; border-top-right-radius:40px;bottom: 3px;";
+			$ButtonAppearanceEnd  = 'background-position-x: 38px;';
+			$ButtonExtra = "";				
+		break;
+		case 1:
+			$ButtonAppearance = "width:100px;right:0;border-bottom-left-radius:40px; border-top-left-radius:40px;bottom: 3px;";
+			$ButtonAppearanceEnd = 'background-position-x: 5px;';
+			$ButtonExtra = "";				
+		break;
+		case 2:
+			$ButtonAppearance = "width:100%;left:0;bottom:3px;";
+			$ButtonAppearanceEnd ='';
+			$ButtonExtra = "body {padding-bottom:60px;}";				
+		break;
+	}
+
+	$strCSS = t($default_css, array(
+		'!button_appearance' => $ButtonAppearance,
+		'!change_color' => _changeColor(variable_get('callnow_bgcolor', '#81c28b'),'lighter'),
+		'!svg_image' => _svg(_changeColor(variable_get('callnow_bgcolor', '#81c28b'), 'darker')),
+		'!default_color' => variable_get('callnow_bgcolor', '#81c28b'),
+		'!button_appearance_end' => $ButtonAppearanceEnd,
+		'!button_extra' => $ButtonExtra
+	));
+	
+	drupal_add_css($strCSS, array('group' => CSS_THEME, 'type' => 'inline', 'media' => 'screen'));
+}
+
+// Color functions to calculate borders
+function _changeColor($color, $direction) {
+	if(!preg_match('/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i', $color, $parts));
+	if(!isset($direction) || $direction == "lighter") { $change = 45; } else { $change = -50; }
+	for($i = 1; $i <= 3; $i++) {
+	  $parts[$i] = hexdec($parts[$i]);
+	  $parts[$i] = round($parts[$i] + $change);
+	  if($parts[$i] > 255) { $parts[$i] = 255; } elseif($parts[$i] < 0) { $parts[$i] = 0; }
+	  $parts[$i] = dechex($parts[$i]);
+	} 
+	$output = '#' . str_pad($parts[1],2,"0",STR_PAD_LEFT) . str_pad($parts[2],2,"0",STR_PAD_LEFT) . str_pad($parts[3],2,"0",STR_PAD_LEFT);
+	return $output;
+}
+
+// Create svg call button
+function _svg($color2) {
+	$svg = '<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="38.000000pt" height="38.000000pt" viewBox="0 0 38.000000 38.000000"
+ preserveAspectRatio="xMidYMid meet">
+<metadata>
+Created by potrace 1.10, written by Peter Selinger 2001-2011
+</metadata>
+<g transform="translate(0.000000,38.000000) scale(0.100000,-0.100000)"
+fill="#000000" stroke="none">
+<path d="M122 323 c-102 -50 -109 -203 -13 -269 42 -28 115 -33 161 -9 77 40
+105 154 56 226 -44 64 -133 87 -204 52z m145 -23 c72 -43 85 -153 25 -212 -38
+-39 -111 -49 -161 -24 -64 33 -90 121 -56 187 34 64 128 89 192 49z"/>
+<path d="M117 264 c-26 -27 12 -111 65 -144 42 -26 93 -23 93 5 0 17 -7 20
+-44 20 -52 1 -76 27 -76 84 0 34 -20 53 -38 35z"/>
+</g>
+</svg>';
+	return base64_encode($svg);
+}

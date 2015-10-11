@@ -1,0 +1,5 @@
+name = Call Now Button
+description = Call Now Button for mobile browser (By Aris Priyantoro, http://aris.pituruh.com)
+package = Responsive
+core = 7.x
+version = "7.x-0.1-dev"
